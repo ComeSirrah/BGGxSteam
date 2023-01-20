@@ -15,9 +15,10 @@ num_per_page = 9
 
 # add some options for the chrome instance
 options = Options()
-options.add_argument('--headless')      # no one likes a pop-up
+# options.add_argument('--headless')      # no one likes a pop-up TODO: BUG! STEAM WILL NOT RETURN TAGS WHILE HEADLESS
 options.add_argument('--no-sandbox')
 options.add_argument('--disable-dev-shm-usage')     # probably unnecessary but should handle potential mem issues
+
 
 # # Create a new instance of the Chrome driver
 driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
@@ -85,13 +86,24 @@ for item in items:
 # print([title, image_url, file_rating_image])
 
 
+for sub_link in sublinks_to_scrape:
+    driver.get(sub_link[0]) # taking the actual sublink and passing to driver
+    wait = WebDriverWait(driver, 10)
+    elements = driver.find_elements(By.CLASS_NAME, 'workshopTagsTitle')
+    for element in elements:
+        tag_value = element.find_element(By.XPATH, './following-sibling::*')
+        print(element.text, tag_value.text)
+
+
+
 # Close the browser window
 driver.quit()
 
 if __name__ == '__main__':
-    # pass
-
-    print(item_information)
+    pass
+    #
+    # for sublinks in sublinks_to_scrape:
+    #     print(sublinks)
     #
     # for key, values in item_information.items():
     #     print(f"{key}: {values}")
