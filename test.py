@@ -8,7 +8,9 @@ from selenium.webdriver.support import expected_conditions as EC
 
 # Define the search term and result count
 search_term = "Betrayal"
-num_per_page =30
+num_per_page = 9
+# num_per_page = 18
+# num_per_page = 30
 
 
 # add some options for the chrome instance
@@ -17,7 +19,7 @@ options.add_argument('--headless')      # no one likes a pop-up
 options.add_argument('--no-sandbox')
 options.add_argument('--disable-dev-shm-usage')     # probably unnecessary but should handle potential mem issues
 
-# Create a new instance of the Chrome driver
+# # Create a new instance of the Chrome driver
 driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
 # Navigate to the Steam Workshop search page
@@ -34,31 +36,41 @@ item_information = {}
 sublinks_to_scrape = []
 
 duplicate_name_counter = 1
+id_int = 0
 
 # Scrape the workshop page for relevant data and sublinks
 items = driver.find_elements(By.CLASS_NAME, "workshopItem")
 for item in items:
     title = item.find_element(By.CLASS_NAME, "workshopItemTitle").text
     dict_key = title
+    author_id = item.find_element(By.CLASS_NAME, 'workshop_author_link').text
+    author_id_link = item.find_element(By.CLASS_NAME, 'workshop_author_link').get_attribute("href")
+
     image_url = item.find_element(By.CLASS_NAME, "workshopItemPreviewImage").get_attribute("src")
     file_rating_image = item.find_element(By.CLASS_NAME, "fileRating").get_attribute("src")
+
+    id_key = id_int
     link = item.find_element(By.CLASS_NAME, "ugc").get_attribute("href")
-    sublinks_to_scrape.append(link)
+    sublinks_to_scrape.append((link, id_key))
+
+    id_int += 1
 
     if dict_key in item_information:
         while dict_key in item_information:     # add iterating numbers to duplicate title to prevent overriding entries
             duplicate_name_counter += 1
             dict_key = title + '(' + str(duplicate_name_counter) + ')'
-        item_information[dict_key] = title, image_url, file_rating_image, link
+        item_information[dict_key] = {'title': title, 'image_url': image_url, 'file_rating_image': file_rating_image,
+                                      'link': link, 'author_id': author_id, 'author_id_link': author_id_link,
+                                      'id_key': id_key}
 
     else:
-        item_information[dict_key] = title, image_url, file_rating_image, link
+        item_information[dict_key] = {'title': title, 'image_url': image_url, 'file_rating_image': file_rating_image,
+                                      'link': link, 'author_id': author_id, 'author_id_link': author_id_link,
+                                      'id_key': id_key}
         duplicate_name_counter = 1
 
-# TODO: add author section initial for loop and item_information
-#  Create id_key value
-#  add id_key value to item_information and sublinks_to_scrape to correlate data
-#  scrape sublinks for game_category, number_of_players, play_time, etc. and update corresponding item_information
+
+# TODO: scrape sublinks for game_category, number_of_players, play_time, etc. and update corresponding item_information
 #  keys with values
 
 # scrape each
@@ -77,7 +89,10 @@ for item in items:
 driver.quit()
 
 if __name__ == '__main__':
+    # pass
 
-    for key, values in item_information.items():
-        print(f'{key}:\t{values}')
-    print(len(item_information))
+    print(item_information)
+    #
+    # for key, values in item_information.items():
+    #     print(f"{key}: {values}")
+    #
