@@ -52,7 +52,6 @@ for item in items:
 
     id_key = id_int
     link = item.find_element(By.CLASS_NAME, "ugc").get_attribute("href")
-    sublinks_to_scrape.append((link, id_key))
 
     id_int += 1
 
@@ -61,18 +60,17 @@ for item in items:
             duplicate_name_counter += 1
             dict_key = title + '(' + str(duplicate_name_counter) + ')'
         item_information[dict_key] = {'title': title, 'image_url': image_url, 'file_rating_image': file_rating_image,
-                                      'link': link, 'author_id': author_id, 'author_id_link': author_id_link,
-                                      'id_key': id_key}
+                                      'link': link, 'author_id': author_id, 'author_id_link': author_id_link}
+        sublinks_to_scrape.append((link, dict_key))
 
     else:
         item_information[dict_key] = {'title': title, 'image_url': image_url, 'file_rating_image': file_rating_image,
-                                      'link': link, 'author_id': author_id, 'author_id_link': author_id_link,
-                                      'id_key': id_key}
+                                      'link': link, 'author_id': author_id, 'author_id_link': author_id_link}
+        sublinks_to_scrape.append((link, dict_key))
         duplicate_name_counter = 1
 
 
-# TODO: scrape sublinks for game_category, number_of_players, play_time, etc. and update corresponding item_information
-#  keys with values
+
 
 # scrape each
 # type = item.find_element(By.CLASS_NAME, "workshopItemTag").text
@@ -90,21 +88,25 @@ for sub_link in sublinks_to_scrape:
     driver.get(sub_link[0]) # taking the actual sublink and passing to driver
     wait = WebDriverWait(driver, 10)
     elements = driver.find_elements(By.CLASS_NAME, 'workshopTagsTitle')
+    temp_dict = {}
     for element in elements:
         tag_value = element.find_element(By.XPATH, './following-sibling::*')
-        print(element.text, tag_value.text)
-
-
+        temp_dict[element.text.rstrip(": ")] = tag_value.text # getting rid of trailing text from keys
+        # print(element.text, tag_value.text)
+    item_information[sub_link[1]].update(temp_dict)
+    if 'Tags' in item_information[sub_link[1]]:     # remove unwanted/ problematic information
+        del item_information[sub_link[1]]['Tags']
+    if 'Assets' in item_information[sub_link[1]]:  # remove unwanted/ problematic information
+        del item_information[sub_link[1]]['Assets']
+    if 'Game Category' in item_information[sub_link[1]]:  # remove unwanted/ problematic information
+        del item_information[sub_link[1]]['Game Category']
 
 # Close the browser window
 driver.quit()
 
 if __name__ == '__main__':
-    pass
-    #
-    # for sublinks in sublinks_to_scrape:
-    #     print(sublinks)
-    #
-    # for key, values in item_information.items():
-    #     print(f"{key}: {values}")
-    #
+    # pass
+    for key, value in item_information.items():
+        print(f'{key}:')
+        for subkey, sub_value in value.items():
+            print(f'\t\t{subkey}:\t{sub_value}')
